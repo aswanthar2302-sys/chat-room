@@ -50,6 +50,34 @@ function setupSocketEvents() {
         // Scroll down
         chatMessages.scrollTop = chatMessages.scrollHeight;
     });
+
+    // Display typing indicator
+    socket.on('typing', (username) => {
+        const chatMessages = document.querySelector('.chat-messages');
+
+        // Check if indicator already exists
+        let typingIndicator = document.getElementById('typing-indicator');
+
+        if (!typingIndicator) {
+            typingIndicator = document.createElement('div');
+            typingIndicator.id = 'typing-indicator';
+            typingIndicator.style.fontStyle = 'italic';
+            typingIndicator.style.color = '#ccc';
+            typingIndicator.style.fontSize = '0.8rem';
+            typingIndicator.style.marginBottom = '10px';
+            typingIndicator.style.paddingLeft = '15px';
+            chatMessages.appendChild(typingIndicator);
+        }
+
+        typingIndicator.innerText = `${username} is typing...`;
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            if (typingIndicator) typingIndicator.remove();
+        }, 3000);
+
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
 }
 
 // Message submit
@@ -69,8 +97,21 @@ chatForm.addEventListener('submit', (e) => {
     e.target.elements.msg.focus();
 });
 
+// Emit typing
+const msgInput = document.getElementById('msg');
+msgInput.addEventListener('input', () => {
+    socket.emit('typing');
+});
+
+
 // Output message to DOM
 function outputMessage(message) {
+    // Remove typing indicator if it exists
+    const typingIndicator = document.getElementById('typing-indicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+
     const div = document.createElement('div');
 
     // Check if message is from current user for styling
